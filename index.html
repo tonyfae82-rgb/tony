@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Gamer Protegido</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; width: 100%; background-color: #0d0e15; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .app { width: 100%; height: 100%; display: flex; flex-direction: column; }
+        
+        /* 🔒 Tela de Bloqueio por Código */
+        #tela-bloqueio {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f0c1b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            gap: 15px;
+            color: white;
+        }
+
+        .caixa-bloqueio {
+            background: #15102a;
+            padding: 25px;
+            border-radius: 16px;
+            border: 2px solid #9d4edd;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.4);
+            width: 90%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .exibicao-codigo {
+            background: #0d0e15;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px dashed #eccc68;
+            color: #eccc68;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 2px;
+        }
+
+        /* 👑 Barra de Topo Fixa e Indeletável */
+        .barra-topo {
+            width: 100%;
+            background: #15102a;
+            padding: 12px 15px;
+            border-bottom: 2px solid #9d4edd;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .topo-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-online {
+            width: 8px;
+            height: 8px;
+            background-color: #2ed573;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 6px #2ed573;
+        }
+
+        /* Botão do PobreFlix no Topo */
+        .btn-pobreflix {
+            background: #e50914;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-pobreflix:hover {
+            background: #ff1f2d;
+        }
+
+        /* Área de Mensagens do Chat */
+        #janela-chat { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            background: linear-gradient(180deg, #0f0c1b, #15102a);
+        }
+        
+        .balao { 
+            padding: 12px 15px; 
+            border-radius: 18px; 
+            max-width: 85%; 
+            width: fit-content; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            line-height: 1.4;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            animation: surgir 0.3s ease-out;
+        }
+
+        @keyframes surgir {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .voce { 
+            background: linear-gradient(135deg, #ffeb3b, #fbc02d);
+            color: #000; 
+            align-self: flex-start; 
+            border-top-left-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .ia { 
+            background: linear-gradient(135deg, #7b2cbf, #5a189a);
+            color: #fff; 
+            align-self: flex-end; 
+            border-top-right-radius: 4px;
+            border: 1px solid #9d4edd;
+        }
+
+        .media-container {
+            margin-top: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #9d4edd;
+            max-width: 100%;
+            background: #000;
+        }
+
+        .media-container img { width: 100%; height: auto; display: block; }
+        
+        .entrada-container {
+            background: #15102a;
+            padding: 12px;
+            border-top: 1px solid #241942;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .entrada { display: flex; width: 100%; gap: 8px; }
+        
+        input { 
+            padding: 12px; 
+            border: 1px solid #241942; 
+            border-radius: 10px; 
+            background: #0d0e15; 
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        input:focus { border-color: #9d4edd; }
+        input#msg { flex: 1; }
+        
+        .botoes-acoes {
+            display: flex;
+            gap: 8px;
+        }
+        
+        button { 
+            border: none; 
+            padding: 12px 15px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-size: 0.88rem;
+            text-align: center;
+        }
+
+        .btn-enviar { background: #45f3ff; color: black; }
+        .btn-enviar:hover { background: #1fd0dd; }
+
+        .btn-escolher { background: #9d4edd; color: white; }
+        .btn-escolher:hover { background: #7b2cbf; }
+
+        .btn-imagem-direta { background: #ff9f43; color: white; }
+        .btn-imagem-direta:hover { background: #ee5253; }
+
+        .btn-deletar { background: #ff4757; color: white; }
+        .btn-deletar:hover { background: #ff6b81; }
+
+        .btn-bloqueio-acessar { background: #45f3ff; color: black; }
+        .btn-bloqueio-criar { background: #eccc68; color: black; }
+
+        .menu-sugestoes {
+            display: none;
+            position: absolute;
+            bottom: 115px;
+            left: 12px;
+            background: #1c1437;
+            border: 1px solid #3c2a70;
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
+            z-index: 10;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .opcao-sugestao {
+            background: #241942; color: #fff; padding: 8px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            text-align: left; border: none; width: 230px;
+        }
+        .opcao-sugestao:hover { background: #9d4edd; }
+    </style>
+</head>
+<body>
+
+<div id="tela-bloqueio">
+    <div class="caixa-bloqueio">
+        <h2>🔒 Painel de Acesso</h2>
+        <p style="color: #a29bfe; font-size: 0.85rem;">Insira as informações abaixo para acessar.</p>
+        
+        <input type="text" id="nome-usuario" placeholder="Seu nome (Como a IA deve te chamar)" style="text-align: center; width: 100%;">
+        <input type="password" id="codigo-acesso" placeholder="Digite o código de acesso..." style="text-align: center; width: 100%;">
+        
+        <div id="bloco-codigo-visivel" class="exibicao-codigo">Código Gerado: Carregando...</div>
+        
+        <button class="btn-bloqueio-acessar" onclick="verificarCodigo()">🔑 Acessar Chat</button>
+        <button class="btn-bloqueio-criar" onclick="criarNovoCodigo()">✨ Criar Novo Código</button>
+    </div>
+</div>
+
+<div class="app">
+    <div class="barra-topo">
+        <div class="topo-info">
+            <span class="status-online"></span>
+            🤖 LULA LADRÃO AI
+        </div>
+        <button class="btn-pobreflix" onclick="abrirPobreflix()">🎬 PobreFlix</button>
+    </div>
+
+    <input type="password" id="key-input" value="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" style="display:none;">
+    
+    <div id="janela-chat">
+        <div class="balao ia" id="msg-inicial">✨ Sistema Liberado! Sou a sua IA. Posso criar mapas mentais de estudos e imagens do YouTube. Escreva no campo ou use os botões abaixo!</div>
+    </div>
+    
+    <div class="entrada-container">
+        <div class="menu-sugestoes" id="menu-opcoes">
+            <button class="opcao-sugestao" onclick="selecionarOpcao('Crie um mapa mental sobre a Segunda Guerra Mundial')">🗺️ Criar Mapa Mental...</button>
+            <button class="opcao-sugestao" onclick="selecionarOpcao('Crie uma imagem do Jazzghost jogando minecraft')">🎮 Imagem: Jazzghost...</button>
+            <button class="opcao-sugestao" onclick="selecionarOpcao('Me ajude com perguntas sobre História')">📚 Perguntas de Estudo...</button>
+        </div>
+
+        <div class="entrada">
+            <input type="text" id="msg" placeholder="Digite uma mensagem ou comando...">
+            <button id="btn-imagem" class="btn-imagem-direta">🎨 Imagem</button>
+            <button class="btn-enviar" onclick="enviar()">Enviar</button>
+        </div>
+        
+        <div class="botoes-acoes">
+            <button class="btn-escolher" style="flex: 1;" onclick="toggleMenu()">🗺️ Mapas & Ajudas</button>
+            <button class="btn-deletar" style="flex: 1;" onclick="deletarTudo()">Deletar Tudo</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let nomeSalvo = "Usuário";
+    let codigoAtual = Math.floor(1000 + Math.random() * 9000).toString();
+    document.getElementById('bloco-codigo-visivel').innerText = `Código Atual do Sistema: ${codigoAtual}`;
+
+    let historicoContexto = [
+        { role: "system", content: "Você é uma inteligência artificial avançada de apoio aos estudos e criação. Quando pedirem um mapa mental ou ajuda com perguntas, estruture tudo com tópicos limpos, emojis explicativos e de forma super organizada para facilitar a leitura. Sempre trate o usuário pelo nome que está no contexto." }
+    ];
+
+    // Nova função injetora segura que evita o bloqueio de pop-ups dos navegadores
+    function abrirPobreflix() {
+        const novaJanela = window.open('about:blank', '_blank');
+        if (!novaJanela) {
+            alert("Seu navegador bloqueou a janela! Por favor, permita pop-ups para este site para visualizar o PobreFlix.");
+            return;
+        }
+
+        const codigoPobreflix = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pobreflix - Assista a Trailers Online</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #111; color: #fff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; overflow-x: hidden; user-select: none; }
+        header { background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0)); padding: 1.5rem 4%; display: flex; align-items: center; position: fixed; width: 100%; top: 0; z-index: 1000; transition: background-color 0.5s; }
+        .logo { color: #e50914; font-size: 2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 3rem; }
+        nav ul { display: flex; list-style: none; gap: 1.2rem; }
+        nav a { color: #e5e5e5; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; }
+        nav a:hover { color: #b3b3b3; }
+        .banner { height: 85vh; background: linear-gradient(to top, #111 5%, rgba(0,0,0,0.3) 60%), linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0)), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1200') no-repeat center center/cover; display: flex; flex-direction: column; justify-content: center; padding: 0 4%; margin-bottom: 1rem; }
+        .banner h1 { font-size: 4rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; }
+        .banner p { max-width: 600px; font-size: 1.2rem; margin-bottom: 1.5rem; color: #fff; text-shadow: 1px 1px 4px rgba(0,0,0,0.6); line-height: 1.4; }
+        .btn-banner { background-color: #fff; color: #000; border: none; padding: 0.8rem 2.3rem; font-size: 1.2rem; font-weight: bold; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background-color 0.2s; width: max-content; }
+        .btn-banner:hover { background-color: rgba(255,255,255,0.75); }
+        .conteudo { padding: 0 4%; position: relative; z-index: 2; }
+        .fileira { margin-bottom: 2.5rem; }
+        .fileira h2 { font-size: 1.4rem; color: #e5e5e5; margin-bottom: 0.7rem; font-weight: bold; }
+        .carrossel { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.5rem 0; }
+        .carrossel::-webkit-scrollbar { display: none; }
+        .card-filme { min-width: 240px; height: 140px; border-radius: 4px; overflow: hidden; position: relative; cursor: pointer; transition: transform 0.4s ease; background-color: #181818; }
+        .card-filme:hover { transform: scale(1.08); z-index: 10; }
+        .poster { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 1.1rem; padding: 10px; letter-spacing: 0.5px; }
+        .info-titulo { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0)); padding: 15px 10px 8px 10px; font-size: 0.85rem; font-weight: bold; }
+        .modal-player { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); z-index: 2000; justify-content: center; align-items: center; }
+        .container-video { width: 90%; max-width: 950px; position: relative; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .container-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .btn-fechar { position: absolute; top: 25px; right: 35px; background: none; border: none; color: #fff; font-size: 3rem; cursor: pointer; z-index: 2100; transition: color 0.2s; }
+        .btn-fechar:hover { color: #b3b3b3; }
+    </style>
+</head>
+<body>
+    <header id="navHeader">
+        <div class="logo">Pobreflix</div>
+        <nav>
+            <ul>
+                <li><a href="#" style="font-weight: bold; color: #fff;">Início</a></li>
+                <li><a href="#">Séries</a></li>
+                <li><a href="#">Filmes</a></li>
+                <li><a href="#">Minha Lista</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="banner">
+        <h1>Sonic 3: O Filme</h1>
+        <p>Shadow ressurge como um novo e poderoso adversary. Sonic, Tails e Knuckles precisam se unir novamente para proteger o planeta na maior batalha de suas vidas.</p>
+        <button class="btn-banner" onclick="abrirPlayer('https://www.youtube.com/embed/squWBNYbf98')">▶ Assistir</button>
+    </div>
+
+    <main class="conteudo">
+        <div class="fileira">
+            <h2>Populares no Pobreflix</h2>
+            <div class="carrossel">
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/squWBNYbf98')">
+                    <div class="poster" style="background: linear-gradient(45deg, #021b79, #0575e6);">SONIC 3</div>
+                    <div class="info-titulo">Sonic 3: O Filme</div>
+                </div>
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/wzXG6fPeeHQ')">
+                    <div class="poster" style="background: linear-gradient(45deg, #11998e, #38ef7d);">MINECRAFT</div>
+                    <div class="info-titulo">Minecraft: O Filme</div>
+                </div>
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/SM84Rq4Ieds')">
+                    <div class="poster" style="background: linear-gradient(45deg, #00c6ff, #0072ff);">SONIC 2</div>
+                    <div class="info-titulo">Sonic 2: O Filme</div>
+                </div>
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/cZpE_A19o80')">
+                    <div class="poster" style="background: linear-gradient(45deg, #f12711, #f5af19);">SUPER MARIO</div>
+                    <div class="info-titulo">Super Mario Bros.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fileira">
+            <h2>Adicionados Recentemente</h2>
+            <div class="carrossel">
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/vXunl7f4u90')">
+                    <div class="poster" style="background: linear-gradient(45deg, #e65c00, #f9d423);">BRANCA DE NEVE</div>
+                    <div class="info-titulo">Branca de Neve (Live-Action)</div>
+                </div>
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/HJv4LpU9KcA')">
+                    <div class="poster" style="background: linear-gradient(45deg, #2c3e50, #000000);">THE BATMAN</div>
+                    <div class="info-titulo">The Batman</div>
+                </div>
+                <div class="card-filme" onclick="abrirPlayer('https://www.youtube.com/embed/shW9i6k8cB0')">
+                    <div class="poster" style="background: linear-gradient(45deg, #8a2387, #e94057);">HOMEM ARANHA</div>
+                    <div class="info-titulo">Homem-Aranha: Através do Aranhaverso</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="cinemaModal" class="modal-player">
+        <button class="btn-fechar" onclick="fecharPlayer()">&times;</button>
+        <div class="container-video">
+            <iframe id="iframeVideo" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        function abrirPlayer(linkEmbed) {
+            var modal = document.getElementById('cinemaModal');
+            var iframe = document.getElementById('iframeVideo');
+            iframe.src = linkEmbed + "?autoplay=1";
+            modal.style.display = 'flex';
+        }
+        function fecharPlayer() {
+            var modal = document.getElementById('cinemaModal');
+            var iframe = document.getElementById('iframeVideo');
+            modal.style.display = 'none';
+            iframe.src = "";
+        }
+        window.onscroll = function() {
+            var header = document.getElementById('navHeader');
+            if (window.pageYOffset > 20) {
+                header.style.backgroundColor = "#141414";
+            } else {
+                header.style.backgroundColor = "transparent";
+            }
+        };
+    <\/script>
+</body>
+</html>`;
+
+        novaJanela.document.open();
+        novaJanela.document.write(codigoPobreflix);
+        novaJanela.document.close();
+    }
+
+    function verificarCodigo() {
+        const inputCodigo = document.getElementById('codigo-acesso').value;
+        const inputNome = document.getElementById('nome-usuario').value.trim();
+        
+        if (inputNome !== "") {
+            nomeSalvo = inputNome;
+            historicoContexto[0].content += ` O nome do usuário é ${nomeSalvo}. Chame-o por esse nome de forma natural durante as respostas.`;
+        }
+
+        if (inputCodigo === codigoAtual) {
+            document.getElementById('tela-bloqueio').style.display = 'none';
+            document.getElementById('codigo-acesso').value = "";
+        } else {
+            alert("❌ Código incorreto! Tente novamente.");
+        }
+    }
+
+    function criarNovoCodigo() {
+        const novoCodigo = Math.floor(1000 + Math.random() * 9000).toString();
+        codigoAtual = novoCodigo;
+        document.getElementById('bloco-codigo-visivel').innerText = `Código Atual do Sistema: ${novoCodigo}`;
+    }
+
+    programarAutodestruicao(document.getElementById('msg-inicial'));
+
+    function toggleMenu() {
+        const menu = document.getElementById('menu-opcoes');
+        menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    document.getElementById('msg').addEventListener('keydown', (e) => { if(e.key === 'Enter') enviar(); });
+
+    document.getElementById('btn-imagem').addEventListener('click', () => {
+        const input = document.getElementById('msg');
+        if (input.value.trim() !== "") {
+            input.value = "Crie uma imagem de " + input.value;
+            enviar();
+        } else {
+            alert("Digite algo no campo de texto primeiro para criar a imagem!");
+        }
+    });
+
+    function selecionarOpcao(texto) {
+        document.getElementById('msg').value = texto;
+        toggleMenu();
+        enviar();
+    }
+
+    function programarAutodestruicao(elemento) {
+        setTimeout(() => {
+            if (elemento) {
+                elemento.style.opacity = "0";
+                elemento.style.transform = "scale(0.95)";
+                setTimeout(() => { if (elemento.parentNode) elemento.remove(); }, 500);
+            }
+        }, 120000);
+    }
+
+    function deletarTudo() {
+        document.getElementById('janela-chat').innerHTML = "";
+    }
+
+    async function enviar() {
+        const key = document.getElementById('key-input').value;
+        const input = document.getElementById('msg');
+        const chat = document.getElementById('janela-chat');
+        const texto = input.value.trim();
+
+        if (!texto) return;
+
+        document.getElementById('menu-opcoes').style.display = 'none';
+
+        const idVoce = "voce-" + Date.now();
+        chat.innerHTML += `<div class="balao voce" id="${idVoce}"><strong>Você:</strong> ${texto}</div>`;
+        input.value = "";
+        chat.scrollTop = chat.scrollHeight;
+        programarAutodestruicao(document.getElementById(idVoce));
+
+        const idLoading = "load-" + Date.now();
+        chat.innerHTML += `<div class="balao ia" id="${idLoading}">Processando...</div>`;
+        const balaoIA = document.getElementById(idLoading);
+        chat.scrollTop = chat.scrollHeight;
+
+        const textoLower = texto.toLowerCase();
+
+        if (textoLower.includes("imagem") || textoLower.includes("desenhe") || textoLower.includes("foto")) {
+            try {
+                let basePrompt = texto.replace(/(crie uma imagem de|desenhe um|foto de|imagem de)/gi, "").trim();
+                let conhecimentoYoutube = "";
+
+                if (textoLower.includes("jazzghost")) {
+                    basePrompt = "minecraft builder character, look like jazzghost channel style";
+                    conhecimentoYoutube = ", cute cubic avatar, blocky castle construction, vibrant epic shaders, gaming thumbnail, 3d render";
+                } else if (textoLower.includes("mrbeast") || textoLower.includes("mr beast")) {
+                    conhecimentoYoutube = ", youtube set design, huge bright studio lighting, cinematic setup, 4k";
+                } else if (textoLower.includes("minecraft")) {
+                    conhecimentoYoutube = ", high quality 3d cubic blocks world, bright saturation, gaming background";
+                } else {
+                    conhecimentoYoutube = ", highly detailed digital art, vivid illustration";
+                }
+
+                const finalPrompt = encodeURIComponent(basePrompt + conhecimentoYoutube);
+                const imgUrl = `https://image.pollinations.ai/p/${finalPrompt}?width=512&height=512&enhance=true&seed=${Math.floor(Math.random() * 1000)}`;
+                
+                balaoIA.innerHTML = `<strong>IA:</strong> Aqui está o processamento gráfico solicitado:<br><div class="media-container"><img src="${imgUrl}"></div>`;
+            } catch (err) {
+                balaoIA.innerText = "Erro ao processar imagem.";
+            }
+            programarAutodestruicao(balaoIA);
+            chat.scrollTop = chat.scrollHeight;
+            return;
+        }
+
+        try {
+            historicoContexto.push({ role: "user", content: texto });
+            if (historicoContexto.length > 11) historicoContexto.splice(1, 2);
+
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+                body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: historicoContexto })
+            });
+
+            const data = await res.json();
+            if (data.choices && data.choices[0]) {
+                const resposta = data.choices[0].message.content;
+                balaoIA.innerHTML = `<strong>IA:</strong> ${resposta}`;
+                historicoContexto.push({ role: "assistant", content: resposta });
+            } else {
+                balaoIA.innerText = "Houve um problema de conexão. Tente novamente.";
+            }
+        } catch (e) {
+            balaoIA.innerText = "Erro ao conectar com a IA.";
+        }
+        
+        programarAutodestruicao(balaoIA);
+        chat.scrollTop = chat.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
